@@ -47,7 +47,7 @@ int main()
             }
         }
 
-        cv::imshow("Filtered Binary", filteredBinary);
+        cv::imshow("Camera Feed", filteredBinary);
 
         if (cv::waitKey(20) == 27) {
             break;
