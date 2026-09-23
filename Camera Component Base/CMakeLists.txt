@@ -9,7 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(OpenCV REQUIRED)
 
 # Build main.cpp as an executable named camera_grab.
-add_executable(camera_grab main.cpp)
+add_executable(camera_grab 
+    main.cpp
+    CameraInput.cpp
+    CameraInput.hpp
+)
 
 # Give the program access to OpenCV headers and libraries.
 target_include_directories(camera_grab PRIVATE ${OpenCV_INCLUDE_DIRS})
