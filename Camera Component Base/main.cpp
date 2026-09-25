@@ -16,8 +16,8 @@ int main()
     cv::Mat stats;
     cv::Mat centroids;
 
-    int minArea = 200;    
-    int maxArea = 100000; 
+    int minArea = 200;
+    int maxArea = 100000;
 
 
     if (!CameraInput::init(0, width, height)) {
