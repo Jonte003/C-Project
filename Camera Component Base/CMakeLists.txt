@@ -13,6 +13,8 @@ add_executable(camera_grab
     main.cpp
     CameraInput.cpp
     CameraInput.hpp
+    MarkerDetector.cpp
+    MarkerDetector.hpp
 )
 
 # Give the program access to OpenCV headers and libraries.
