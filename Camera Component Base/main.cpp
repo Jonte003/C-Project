@@ -6,36 +6,11 @@
 
 
 
-cv::Mat GetMainWarpedMarker(cv::Mat& sourceFrame, std::vector<std::vector<cv::Point>>& allSortedQuads, int markerSize = 140) 
-{
-    if (allSortedQuads.empty()) {
-        return cv::Mat();
-    }
-
-    std::vector<cv::Point2f> dstCorners = {
-        cv::Point2f(0.0f, 0.0f),
-        cv::Point2f(static_cast<float>(markerSize), 0.0f),
-        cv::Point2f(static_cast<float>(markerSize), static_cast<float>(markerSize)),
-        cv::Point2f(0.0f, static_cast<float>(markerSize))
-    };
-
-    // Convert list to point2f from point
-    std::vector<cv::Point2f> cornersFloat(allSortedQuads[0].begin(), allSortedQuads[0].end());
-
-    cv::Mat transformMatrix = cv::getPerspectiveTransform(cornersFloat, dstCorners);
-
-    cv::Mat warpedOutput;
-    cv::warpPerspective(sourceFrame, warpedOutput, transformMatrix, cv::Size(markerSize, markerSize));
-
-    return warpedOutput;
-}
-
-
 
 int main()
 {
-    int width = 320;
-    int height = 240;
+    int width = 640;
+    int height = 480;
 
     cv::Mat frame;
 
@@ -43,8 +18,6 @@ int main()
     int maxArea = 100000;
 
     int minQuadArea = 1000;
-
-    std::vector<std::vector<cv::Point>> quadrilaterals;
 
 
 
@@ -55,19 +28,11 @@ int main()
 
     while (CameraInput::getFrame(frame)) 
     {
-        quadrilaterals.clear();        
-
-        MarkerDetector::detectMarkers(frame, minArea, maxArea, minQuadArea, quadrilaterals);
-
-        cv::Mat mat = GetMainWarpedMarker(frame, quadrilaterals, 140);
+        std::vector<QuadWithID> detectedMarkers = MarkerDetector::detectMarkers(frame, minArea, maxArea, minQuadArea);
         
-        if (!mat.empty()) 
+        for (int i = 0; i < detectedMarkers.size(); ++i) 
         {
-            cv::imshow("Warped Marker", mat);
-        } 
-        else if (cv::getWindowProperty("Warped Marker", cv::WND_PROP_VISIBLE) >= 1)
-        {
-            cv::destroyWindow("Warped Marker");
+            std::cout << "Detected Marker ID: " << detectedMarkers[i].id << std::endl;
         }
         
         cv::imshow("Camera Feed", frame);

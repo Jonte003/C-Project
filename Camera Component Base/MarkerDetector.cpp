@@ -2,6 +2,13 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+class QuadWithMat 
+{
+    public:
+        std::vector<cv::Point> corners;
+        cv::Mat matrix;
+};
+
 static void SortCorners(std::vector<std::vector<cv::Point>>& quadrilaterals) 
 {
     for (auto& quad : quadrilaterals) 
@@ -38,11 +45,83 @@ static void SortCorners(std::vector<std::vector<cv::Point>>& quadrilaterals)
     }
 }
 
-void MarkerDetector::detectMarkers(cv::Mat& frame, int minArea, int maxArea, int minQuadArea, std::vector<std::vector<cv::Point>>& quadrilaterals)
+static std::vector<QuadWithMat> GetAllWarpedMarkers(cv::Mat& sourceFrame, std::vector<std::vector<cv::Point>>& allSortedQuads) 
 {
-    cv::Mat gray, thresholded, labels, stats, centroids;
-    std::vector<std::vector<cv::Point>> contours;
-    std::vector<cv::Vec4i> hierarchy;
+
+    if (allSortedQuads.empty()) {
+        return std::vector<QuadWithMat>();
+    }
+
+
+    std::vector<QuadWithMat> warpedMarkers;
+
+    int markerSize = 500;
+    float padding = 20.0f; //White padding around marker requiered for ArUco detection. 
+    float totalSize = static_cast<float>(markerSize) + (2.0f * padding);
+
+    std::vector<cv::Point2f> dstCorners = 
+    {
+        cv::Point2f(padding, padding),
+        cv::Point2f(totalSize - padding, padding),
+        cv::Point2f(totalSize - padding, totalSize - padding),
+        cv::Point2f(padding, totalSize - padding) 
+    };
+
+    for (auto& quad : allSortedQuads) 
+    {
+        std::vector<cv::Point2f> cornersFloat(quad.begin(), quad.end());
+
+        cv::Mat transformMatrix = cv::getPerspectiveTransform(cornersFloat, dstCorners);
+
+        cv::Mat warpedOutput;
+        cv::warpPerspective(sourceFrame, warpedOutput, transformMatrix, cv::Size(static_cast<int>(totalSize), static_cast<int>(totalSize)), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(255, 255, 255));
+        
+        warpedMarkers.push_back({quad, warpedOutput});
+    }
+    
+    return warpedMarkers;
+}
+
+static std::vector<QuadWithID> PrintWarpedArucoCodes(std::vector<QuadWithMat>& warpedMarkers) 
+{
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
+    cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
+    cv::aruco::ArucoDetector detector(dictionary, detectorParams);
+
+    std::vector<QuadWithID> detectedMarkers;
+
+
+    for (size_t i = 0; i < warpedMarkers.size(); ++i) 
+    {
+        std::vector<std::vector<cv::Point2f>> markerCorners;
+        std::vector<int> markerIds;
+        std::vector<std::vector<cv::Point2f>> rejectedCandidates;
+
+        cv::Mat gray;
+
+        cv::cvtColor(warpedMarkers[i].matrix, gray, cv::COLOR_BGR2GRAY);
+
+        detector.detectMarkers(gray, markerCorners, markerIds, rejectedCandidates);
+
+        if (!markerIds.empty())
+        {
+            detectedMarkers.push_back({warpedMarkers[i].corners, markerIds[0]});
+        }
+  
+    }
+    
+    return detectedMarkers;
+}
+
+
+
+std::vector<QuadWithID> MarkerDetector::detectMarkers(cv::Mat& frame, int minArea, int maxArea, int minQuadArea)
+{
+        std::vector<QuadWithID> detectedMarkers;
+        std::vector<std::vector<cv::Point>> quadrilaterals;
+        cv::Mat gray, thresholded, labels, stats, centroids;
+        std::vector<std::vector<cv::Point>> contours;
+        std::vector<cv::Vec4i> hierarchy;
 
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
@@ -61,9 +140,6 @@ void MarkerDetector::detectMarkers(cv::Mat& frame, int minArea, int maxArea, int
             }
         }        
         cv::findContours(filteredBinary, contours, hierarchy, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
-
-        //cv::Mat CountorsFrame = frame.clone();
-        //cv::drawContours(CountorsFrame, contours, -1, cv::Scalar(0, 255, 0), 2);
 
         for (auto& contour : contours) 
         {
@@ -95,15 +171,11 @@ void MarkerDetector::detectMarkers(cv::Mat& frame, int minArea, int maxArea, int
 
         SortCorners(quadrilaterals);
 
-        //Print corners of found quadrilaterals
-        for (int i = 0; i < quadrilaterals.size(); ++i) 
-        {
-            std::cout << "Quadrilateral " << i << std::endl;
-            for (int j = 0; j < quadrilaterals[i].size(); ++j) 
-            {
-                std::cout << quadrilaterals[i][j].x << ", " << quadrilaterals[i][j].y << std::endl;
-            }
-        }
+        std::vector<QuadWithMat> warpedMarkers = GetAllWarpedMarkers(frame, quadrilaterals);
+        detectedMarkers = PrintWarpedArucoCodes(warpedMarkers);
+
+        return detectedMarkers;
 }
+
 
 
