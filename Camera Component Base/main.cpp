@@ -5,8 +5,6 @@
 #include "MarkerDetector.hpp"
 
 
-
-
 int main()
 {
     int width = 640;
@@ -18,7 +16,6 @@ int main()
     int maxArea = 100000;
 
     int minQuadArea = 1000;
-
 
 
     if (!CameraInput::init(0, width, height)) 
@@ -51,4 +48,3 @@ int main()
 
     
 }
-
