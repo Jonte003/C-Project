@@ -3,6 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include "CameraInput.hpp"
 #include "MarkerDetector.hpp"
+#include "InteractionMapping.hpp"
 
 
 int main()
@@ -30,6 +31,9 @@ int main()
         for (int i = 0; i < detectedMarkers.size(); ++i) 
         {
             std::cout << "Detected Marker ID: " << detectedMarkers[i].id << std::endl;
+            MarkerPose pose = InteractionMapping::estimatePose(detectedMarkers[i].corners);
+            std::cout << "Distance: " << pose.distance
+                      << ", Rotation: " << pose.rotation << std::endl;
         }
         
         cv::imshow("Camera Feed", frame);
@@ -43,8 +47,4 @@ int main()
     CameraInput::release();
     cv::destroyAllWindows();
     return 0;
-
-
-
-    
 }
