@@ -94,13 +94,17 @@ static std::vector<QuadWithID> PrintWarpedArucoCodes(std::vector<QuadWithMat> &w
 
     std::vector<QuadWithID> detectedMarkers;
 
-    for (size_t i = 0; i < warpedMarkers.size(); ++i)
+
+    for (int i = 0; i < warpedMarkers.size(); ++i)
     {
         std::vector<std::vector<cv::Point2f>> markerCorners;
         std::vector<int> markerIds;
         std::vector<std::vector<cv::Point2f>> rejectedCandidates;
 
+
         cv::Mat gray;
+
+        
 
         cv::cvtColor(warpedMarkers[i].matrix, gray, cv::COLOR_BGR2GRAY);
 
@@ -108,7 +112,31 @@ static std::vector<QuadWithID> PrintWarpedArucoCodes(std::vector<QuadWithMat> &w
 
         if (!markerIds.empty())
         {
-            detectedMarkers.push_back({warpedMarkers[i].corners, markerIds[0]});
+            int imgWidth = warpedMarkers[i].matrix.cols;
+            int imgHeight = warpedMarkers[i].matrix.rows;
+
+            int tolerance = imgHeight / 2;
+
+            std::vector<cv::Point2f> corners =
+                {
+                    cv::Point2f(0, 0),
+                    cv::Point2f(imgWidth, 0),
+                    cv::Point2f(imgWidth, imgHeight),
+                    cv::Point2f(0, imgHeight)};
+
+            std::vector<cv::Point2f> marker = markerCorners[0];
+            int distanceToCorners = 0;
+            for (int j = 0; j < 4; ++j)
+            {
+                distanceToCorners = distanceToCorners +cv::norm(marker[j] - corners[j]);
+            }
+
+            if (distanceToCorners < tolerance)
+            {
+                detectedMarkers.push_back({warpedMarkers[i].corners, markerIds[0]});
+                return detectedMarkers;
+            }
+
         }
     }
     return detectedMarkers;
@@ -164,9 +192,9 @@ std::vector<QuadWithID> MarkerDetector::detectMarkers(cv::Mat &frame, int minAre
     detectedMarkers = PrintWarpedArucoCodes(warpedMarkers);
 
     cv::Mat markerCorners = frame.clone();
-    for (int i = 0; i < warpedMarkers   .size(); ++i)
+    for (int i = 0; i < detectedMarkers.size(); ++i)
     {
-        for (auto &corner : warpedMarkers[i].corners)
+        for (auto &corner : detectedMarkers[i].corners)
         {
             cv::circle(markerCorners, corner, 4, cv::Scalar(0, 255, 255), -1);
         }
