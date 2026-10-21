@@ -156,24 +156,20 @@ std::vector<QuadWithID> MarkerDetector::detectMarkers(cv::Mat &frame, int minAre
         }
     }
 
-
+    cv::Mat EdgesAndCorners = frame.clone();
+    for (int i = 0; i < quadrilaterals.size(); ++i)
+    {
+        cv::drawContours(EdgesAndCorners, quadrilaterals, static_cast<int>(i), cv::Scalar(255, 0, 0), 2);
+        for (auto &corner : quadrilaterals[i])
+        {
+            cv::circle(EdgesAndCorners, corner, 4, cv::Scalar(0, 255, 255), -1);
+        }
+    }
 
     SortCorners(quadrilaterals);
 
     std::vector<QuadWithMat> warpedMarkers = GetAllWarpedMarkers(frame, quadrilaterals);
     detectedMarkers = PrintWarpedArucoCodes(warpedMarkers);
-
-    
-    cv::Mat EdgesAndCorners = frame.clone();
-    for (int i = 0; i < warpedMarkers.size(); ++i)
-    {
-        for (auto &corner : warpedMarkers[i].corners)
-        {
-            cv::circle(EdgesAndCorners, corner, 4, cv::Scalar(0, 255, 255), -1);
-        }
-    }
-    cv::imshow("Edges and Corners", EdgesAndCorners);
-
 
     return detectedMarkers;
 }

@@ -28,8 +28,6 @@ int main()
     {
         std::vector<QuadWithID> detectedMarkers = MarkerDetector::detectMarkers(frame, minArea, maxArea, minQuadArea);
         
-        std::cout << "Number of detected markers: " << detectedMarkers.size() << std::endl;
-
         for (int i = 0; i < detectedMarkers.size(); ++i) 
         {
             std::cout << "Detected Marker ID: " << detectedMarkers[i].id << std::endl;
