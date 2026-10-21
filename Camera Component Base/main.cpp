@@ -31,9 +31,15 @@ int main()
         for (int i = 0; i < detectedMarkers.size(); ++i) 
         {
             std::cout << "Detected Marker ID: " << detectedMarkers[i].id << std::endl;
+
             MarkerPose pose = InteractionMapping::estimatePose(detectedMarkers[i].corners);
-            std::cout << "Distance: " << pose.distance
-                      << ", Rotation: " << pose.rotation << std::endl;
+            cv::Vec3d eulerAngles = InteractionMapping::toEuler(pose.rotation);
+
+            std::cout << std::fixed << std::setprecision(1)
+                      << ", Distance:  " << pose.distance
+                      << ", X: " << eulerAngles[0]
+                      << ", Y: " << eulerAngles[1]
+                      << ", Z: " << eulerAngles[2] << std::endl;
         }
         
         cv::imshow("Camera Feed", frame);

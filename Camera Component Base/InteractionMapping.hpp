@@ -12,6 +12,7 @@ struct MarkerPose {
 class InteractionMapping {
     public:
         static MarkerPose estimatePose(std::vector<cv::Point> corners);
+        static cv::Vec3d toEuler(cv::Vec3d rotationVec);
 };
 
 #endif
