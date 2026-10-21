@@ -3,8 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include "CameraInput.hpp"
 #include "MarkerDetector.hpp"
-
-
+#include "InteractionMapping.hpp"
 
 
 int main()
@@ -20,7 +19,6 @@ int main()
     int minQuadArea = 1000;
 
 
-
     if (!CameraInput::init(0, width, height)) 
     {
         return 1;
@@ -33,6 +31,15 @@ int main()
         for (int i = 0; i < detectedMarkers.size(); ++i) 
         {
             std::cout << "Detected Marker ID: " << detectedMarkers[i].id << std::endl;
+
+            MarkerPose pose = InteractionMapping::estimatePose(detectedMarkers[i].corners);
+            cv::Vec3d eulerAngles = InteractionMapping::toEuler(pose.rotation);
+
+            std::cout << std::fixed << std::setprecision(1)
+                      << ", Distance:  " << pose.distance
+                      << ", X: " << eulerAngles[0]
+                      << ", Y: " << eulerAngles[1]
+                      << ", Z: " << eulerAngles[2] << std::endl;
         }
         
         cv::imshow("Camera Feed", frame);
@@ -46,9 +53,4 @@ int main()
     CameraInput::release();
     cv::destroyAllWindows();
     return 0;
-
-
-
-    
 }
-
