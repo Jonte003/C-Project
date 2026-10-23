@@ -4,6 +4,7 @@
 #include "CameraInput.hpp"
 #include "MarkerDetector.hpp"
 #include "InteractionMapping.hpp"
+#include "OutputAdapter.hpp"
 
 
 int main()
@@ -17,7 +18,6 @@ int main()
     int maxArea = 100000;
 
     int minQuadArea = 1000;
-
 
     if (!CameraInput::init(0, width, height)) 
     {

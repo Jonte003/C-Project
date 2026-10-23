@@ -17,6 +17,8 @@ add_executable(camera_grab
     MarkerDetector.hpp
     InteractionMapping.cpp
     InteractionMapping.hpp
+    OutputAdapter.cpp
+    OutputAdapter.hpp
 )
 
 # Give the program access to OpenCV headers and libraries.
