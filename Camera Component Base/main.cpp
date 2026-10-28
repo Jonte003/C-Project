@@ -18,6 +18,9 @@ int main()
     int maxArea = 100000;
 
     int minQuadArea = 1000;
+    
+    double nearDistance = InteractionMapping::distanceForQuadArea(height * height);
+    double farDistance  = InteractionMapping::distanceForQuadArea(minQuadArea);
 
     if (!CameraInput::init(0, width, height)) 
     {
@@ -43,7 +46,8 @@ int main()
                                   1.0f,   // zoom: placeholder until zoom is implemented
                                   static_cast<float>(eulerAngles[0]),
                                   static_cast<float>(eulerAngles[1]),
-                                  static_cast<float>(eulerAngles[2]))
+                                  static_cast<float>(eulerAngles[2]));
+                                  
             std::cout << std::fixed
                       << ", Zoom:  " << std::setprecision(2) << zoom
                       << ", X: "     << std::setprecision(1) << eulerAngles[0]
