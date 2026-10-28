@@ -43,11 +43,11 @@ int main()
             double zoom = InteractionMapping::computeZoom(pose.distance, nearDistance, farDistance);
 
             output.sendMarkerData(detectedMarkers[i].id,
-                                  1.0f,   // zoom: placeholder until zoom is implemented
+                                  static_cast<float>(zoom),
                                   static_cast<float>(eulerAngles[0]),
                                   static_cast<float>(eulerAngles[1]),
                                   static_cast<float>(eulerAngles[2]));
-                                  
+
             std::cout << std::fixed
                       << ", Zoom:  " << std::setprecision(2) << zoom
                       << ", X: "     << std::setprecision(1) << eulerAngles[0]
