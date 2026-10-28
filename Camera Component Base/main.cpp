@@ -35,7 +35,7 @@ int main()
             std::cout << "Detected Marker ID: " << detectedMarkers[i].id << std::endl;
 
             MarkerPose pose = InteractionMapping::estimatePose(detectedMarkers[i].corners);
-            cv::Vec3d eulerAngles = InteractionMapping::toEuler(pose.rotation);
+            cv::Vec3d eulerAngles = InteractionMapping::toEuler(pose.rotation, detectedMarkers[i].rotation);
 
             std::cout << std::fixed << std::setprecision(1)
                       << ", Distance:  " << pose.distance

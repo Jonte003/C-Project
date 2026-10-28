@@ -166,13 +166,17 @@ static std::vector<QuadWithID> PrintWarpedArucoCodes(std::vector<QuadWithMat> &w
         cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
         int detectedId = -1;
         int internalRotOffset = 0;
+
     
         if (!dictionary.identify(inner4x4, detectedId, internalRotOffset, 0.5))
         {
             continue; 
         }
 
-        detectedMarkers.push_back({warpedMarkers[i].corners, detectedId});
+        std::cout << internalRotOffset << std::endl;
+
+        detectedMarkers.push_back({warpedMarkers[i].corners, detectedId, internalRotOffset});
+
         return detectedMarkers;
     }
     return detectedMarkers;

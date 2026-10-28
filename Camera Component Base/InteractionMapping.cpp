@@ -32,7 +32,7 @@ MarkerPose InteractionMapping::estimatePose(std::vector<cv::Point> corners)
     return pose;
 }
 
-cv::Vec3d InteractionMapping::toEuler(cv::Vec3d rotationVec)
+cv::Vec3d InteractionMapping::toEuler(cv::Vec3d rotationVec, int rotation)
 {
     cv::Matx33d rotationMatrix;
     cv::Rodrigues(rotationVec, rotationMatrix); // Rotation vector to rotation matrix converter from OpenCV
@@ -47,7 +47,17 @@ cv::Vec3d InteractionMapping::toEuler(cv::Vec3d rotationVec)
     double pitch = std::atan2(adjustedRotationMatrix(2, 1), adjustedRotationMatrix(2, 2));
     double yaw =   std::asin(std::clamp(-adjustedRotationMatrix(2, 0), -1.0, 1.0));
     double roll =  std::atan2(adjustedRotationMatrix(1, 0), adjustedRotationMatrix(0, 0));
-
+    
     double radToDeg = 180.0 / CV_PI;
-    return cv::Vec3d(pitch * radToDeg, yaw * radToDeg, roll * radToDeg);
+
+    roll = roll * radToDeg;
+    if(roll < 0) 
+    {
+        if (rotation == 0) rotation = 4;
+        roll = 90 - roll * -1;
+        rotation--;
+    }
+    roll = 360 - (roll + rotation * 90);
+    
+    return cv::Vec3d(pitch * radToDeg, yaw * radToDeg, roll);
 }
