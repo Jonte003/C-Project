@@ -2,6 +2,14 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+/*
+Component: MarkerDetector
+Primary owner: Jonathan Hettinger
+Responsibility: Find contours and return marker corner positions and ArUco id.
+Main contributions: Countor detection, Corner flattening, ArUco code reading
+*/
+
+
 class QuadWithMat
 {
 public:
@@ -60,16 +68,15 @@ static std::vector<QuadWithMat> GetAllWarpedMarkers(cv::Mat &sourceFrame, std::v
 
     std::vector<QuadWithMat> warpedMarkers;
 
-    int markerSize = 500;
-    float padding = 20.0f; // White padding around marker requiered for ArUco detection.
-    float totalSize = static_cast<float>(markerSize) + (2.0f * padding);
+    float markerSize = 500;
 
     std::vector<cv::Point2f> dstCorners =
         {
-            cv::Point2f(padding, padding),
-            cv::Point2f(totalSize - padding, padding),
-            cv::Point2f(totalSize - padding, totalSize - padding),
-            cv::Point2f(padding, totalSize - padding)};
+            cv::Point2f(0.0f, 0.0f),
+            cv::Point2f(markerSize, 0.0f),
+            cv::Point2f(markerSize, markerSize),
+            cv::Point2f(0.0f, markerSize)
+        };
 
     for (auto &quad : allSortedQuads)
     {
@@ -78,7 +85,7 @@ static std::vector<QuadWithMat> GetAllWarpedMarkers(cv::Mat &sourceFrame, std::v
         cv::Mat transformMatrix = cv::getPerspectiveTransform(cornersFloat, dstCorners);
 
         cv::Mat warpedOutput;
-        cv::warpPerspective(sourceFrame, warpedOutput, transformMatrix, cv::Size(static_cast<int>(totalSize), static_cast<int>(totalSize)), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(255, 255, 255));
+        cv::warpPerspective(sourceFrame, warpedOutput, transformMatrix, cv::Size(markerSize, markerSize), cv::INTER_LINEAR);
 
         warpedMarkers.push_back({quad, warpedOutput});
     }
@@ -86,30 +93,87 @@ static std::vector<QuadWithMat> GetAllWarpedMarkers(cv::Mat &sourceFrame, std::v
     return warpedMarkers;
 }
 
+static bool CheckIfBordersAreValid(int pixels[6][6])
+{
+    // Check if the outer border of the marker is all black (0)
+    for (int i = 0; i < 6; ++i)
+    {
+        if(pixels[0][i] == 1 || pixels[5][i] == 1)
+        {
+            return false;
+        }
+    }
+
+    for (int i = 0; i < 6; ++i)
+    {
+        if(pixels[i][0] == 1 || pixels[i][5] == 1)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static std::vector<QuadWithID> PrintWarpedArucoCodes(std::vector<QuadWithMat> &warpedMarkers)
 {
-    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
-    cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
-    cv::aruco::ArucoDetector detector(dictionary, detectorParams);
-
     std::vector<QuadWithID> detectedMarkers;
 
-    for (size_t i = 0; i < warpedMarkers.size(); ++i)
+    for (int i = 0; i < warpedMarkers.size(); ++i)
     {
-        std::vector<std::vector<cv::Point2f>> markerCorners;
-        std::vector<int> markerIds;
-        std::vector<std::vector<cv::Point2f>> rejectedCandidates;
-
+        int pixels[6][6] = {0};
         cv::Mat gray;
-
         cv::cvtColor(warpedMarkers[i].matrix, gray, cv::COLOR_BGR2GRAY);
 
-        detector.detectMarkers(gray, markerCorners, markerIds, rejectedCandidates);
+        int imgWidth = warpedMarkers[i].matrix.cols;
+        int imgHeight = warpedMarkers[i].matrix.rows;
 
-        if (!markerIds.empty())
+        int cellwidth = imgWidth / 6;
+        int cellheight = imgHeight / 6;
+
+        for (int row = 0; row < 6; ++row)
         {
-            detectedMarkers.push_back({warpedMarkers[i].corners, markerIds[0]});
+            for (int col = 0; col < 6; ++col)
+            {
+                int xLook = col * cellwidth + cellwidth / 2;
+                int yLook = row * cellheight + cellheight / 2;  
+                
+                uchar pixelValue = gray.at<uchar>(yLook, xLook);
+                if (pixelValue >= 128)
+                {
+                    pixels[row][col] = 1;
+                }
+                else
+                {
+                    pixels[row][col] = 0;
+                }
+            }
         }
+
+        
+        if (!CheckIfBordersAreValid(pixels))
+        {
+            continue;
+        }
+
+        cv::Mat inner4x4 = cv::Mat::zeros(4, 4, CV_8UC1);
+        for (int r = 0; r < 4; ++r) {
+           for (int c = 0; c < 4; ++c) {
+                inner4x4.at<uchar>(r, c) = static_cast<uchar>(pixels[r + 1][c + 1]);
+            }
+        }
+
+        cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
+        int detectedId = -1;
+        int internalRotOffset = 0;
+    
+        if (!dictionary.identify(inner4x4, detectedId, internalRotOffset, 0.5))
+        {
+            continue; 
+        }
+
+        detectedMarkers.push_back({warpedMarkers[i].corners, detectedId});
+        return detectedMarkers;
     }
     return detectedMarkers;
 }
@@ -154,22 +218,23 @@ std::vector<QuadWithID> MarkerDetector::detectMarkers(cv::Mat &frame, int minAre
         {
             quadrilaterals.push_back(approx);
         }
-    }
-
-    cv::Mat EdgesAndCorners = frame.clone();
-    for (int i = 0; i < quadrilaterals.size(); ++i)
-    {
-        cv::drawContours(EdgesAndCorners, quadrilaterals, static_cast<int>(i), cv::Scalar(255, 0, 0), 2);
-        for (auto &corner : quadrilaterals[i])
-        {
-            cv::circle(EdgesAndCorners, corner, 4, cv::Scalar(0, 255, 255), -1);
-        }
+        
     }
 
     SortCorners(quadrilaterals);
 
     std::vector<QuadWithMat> warpedMarkers = GetAllWarpedMarkers(frame, quadrilaterals);
     detectedMarkers = PrintWarpedArucoCodes(warpedMarkers);
+
+    cv::Mat markerCorners = frame.clone();
+    for (int i = 0; i < detectedMarkers.size(); ++i)
+    {
+        for (auto &corner : detectedMarkers[i].corners)
+        {
+            cv::circle(markerCorners, corner, 4, cv::Scalar(0, 255, 255), -1);
+        }
+    }
+    cv::imshow("Edges and Corners", markerCorners);
 
     return detectedMarkers;
 }
