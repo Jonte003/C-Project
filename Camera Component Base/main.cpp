@@ -24,6 +24,7 @@ int main()
         return 1;
     }
 
+    OutputAdapter output("127.0.0.1", 9000);
     while (CameraInput::getFrame(frame)) 
     {
         std::vector<QuadWithID> detectedMarkers = MarkerDetector::detectMarkers(frame, minArea, maxArea, minQuadArea);
@@ -34,6 +35,12 @@ int main()
 
             MarkerPose pose = InteractionMapping::estimatePose(detectedMarkers[i].corners);
             cv::Vec3d eulerAngles = InteractionMapping::toEuler(pose.rotation);
+
+            output.sendMarkerData(detectedMarkers[i].id,
+                                  1.0f,   // zoom: placeholder until zoom is implemented
+                                  static_cast<float>(eulerAngles[0]),
+                                  static_cast<float>(eulerAngles[1]),
+                                  static_cast<float>(eulerAngles[2]));
 
             std::cout << std::fixed << std::setprecision(1)
                       << ", Distance:  " << pose.distance
