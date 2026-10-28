@@ -11,8 +11,13 @@ struct MarkerPose {
 
 class InteractionMapping {
     public:
+        static constexpr double focalLength = 600.0;
+
         static MarkerPose estimatePose(std::vector<cv::Point> corners);
         static cv::Vec3d toEuler(cv::Vec3d rotationVec, int rotation);
+        static double distanceForQuadArea(double quadArea);
+
+        static double computeZoom(double distance, double nearDistance, double farDistance);
 };
 
 #endif
