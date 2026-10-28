@@ -9,13 +9,13 @@ class QuadWithID
 public:
     std::vector<cv::Point> corners;
     int id;
+    int rotation;
 };
 
 class MarkerDetector
 {
 public:
     static std::vector<QuadWithID> detectMarkers(cv::Mat& frame, int minArea, int maxArea, int minQuadArea);
-
 };
 
 #endif
