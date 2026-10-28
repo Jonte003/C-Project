@@ -18,6 +18,8 @@ int main()
 
     int minQuadArea = 1000;
 
+    double nearDistance = InteractionMapping::distanceForQuadArea(height * height);
+    double farDistance = InteractionMapping::distanceForQuadArea(minQuadArea);
 
     if (!CameraInput::init(0, width, height)) 
     {
@@ -34,12 +36,13 @@ int main()
 
             MarkerPose pose = InteractionMapping::estimatePose(detectedMarkers[i].corners);
             cv::Vec3d eulerAngles = InteractionMapping::toEuler(pose.rotation);
+            double zoom = InteractionMapping::computeZoom(pose.distance, nearDistance, farDistance);
 
-            std::cout << std::fixed << std::setprecision(1)
-                      << ", Distance:  " << pose.distance
-                      << ", X: " << eulerAngles[0]
-                      << ", Y: " << eulerAngles[1]
-                      << ", Z: " << eulerAngles[2] << std::endl;
+            std::cout << std::fixed
+                      << ", Zoom:  " << std::setprecision(2) << zoom
+                      << ", X: "     << std::setprecision(1) << eulerAngles[0]
+                      << ", Y: "     <<                         eulerAngles[1]
+                      << ", Z: "     <<                         eulerAngles[2] << std::endl;
         }
         
         cv::imshow("Camera Feed", frame);

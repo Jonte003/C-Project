@@ -15,7 +15,6 @@ MarkerPose InteractionMapping::estimatePose(std::vector<cv::Point> corners)
         imagePoints.push_back(cv::Point2f(corner.x, corner.y));
     }
 
-    double focalLength = 600.0;
     cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) <<
         focalLength, 0, 320,
         0, focalLength, 240,
@@ -50,4 +49,15 @@ cv::Vec3d InteractionMapping::toEuler(cv::Vec3d rotationVec)
 
     double radToDeg = 180.0 / CV_PI;
     return cv::Vec3d(pitch * radToDeg, yaw * radToDeg, roll * radToDeg);
+}
+
+double InteractionMapping::distanceForQuadArea(double quadArea)
+{
+    return focalLength / std::sqrt(quadArea);
+}
+
+double InteractionMapping::computeZoom(double distance, double nearDistance, double farDistance)
+{
+    double zoom = (farDistance - distance) / (farDistance - nearDistance);
+    return std::clamp(zoom, 0.0, 1.0);
 }
