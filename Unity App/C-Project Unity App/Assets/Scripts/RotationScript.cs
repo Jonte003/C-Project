@@ -1,7 +1,7 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class RotationHandler : MonoBehaviour
+public class RotationScript : MonoBehaviour
 {
     public GameObject prefabObject1;
     public GameObject prefabObject2;
@@ -9,8 +9,10 @@ public class RotationHandler : MonoBehaviour
 
     public GameObject spawnedObject = null;
 
-    public int rotation;
-    public int size;
+    public float pitch;
+    public float yaw;
+    public float roll;
+    public float zoom;
     public int id;
 
     public int spawnedId = -1;
@@ -41,7 +43,7 @@ public class RotationHandler : MonoBehaviour
                 spawnedObject = null;
             }
 
-            if (id >= 1 && id <= 3) //Spawn new object
+            if (id >= 0 && id <= 2) //Spawn new object
             {
                 SpawnByID(id);
             }
@@ -52,7 +54,7 @@ public class RotationHandler : MonoBehaviour
         }
         else //If ID has not changed
         {
-            if (spawnedObject != null && id >= 1 && id <= 3)
+            if (spawnedObject != null && id >= 0 && id <= 2)
             {
                 UpdateRotation();
             }
@@ -64,30 +66,30 @@ public class RotationHandler : MonoBehaviour
         GameObject prefabToSpawn = null;
         switch (id)
         {
-            case 1:
+            case 0:
                 prefabToSpawn = prefabObject1;
                 break;
-            case 2:
+            case 1:
                 prefabToSpawn = prefabObject2;
                 break;
-            case 3:
+            case 2:
                 prefabToSpawn = prefabObject3;
                 break;
         }
         if (prefabToSpawn != null)
         {
-            Quaternion spawnRotation = Quaternion.Euler(0, rotation, 0);
+            Quaternion spawnRotation = Quaternion.Euler(pitch, yaw, roll);
             spawnedObject = Instantiate(prefabToSpawn, transform.position, spawnRotation);
-            spawnedObject.transform.localScale = new Vector3(size, size, size);
+            spawnedObject.transform.localScale = new Vector3(zoom, zoom, zoom);
             spawnedId = id;
         }
     }
 
     private void UpdateRotation()
     {
-        Quaternion newRotation = Quaternion.Euler(0, rotation, 0);
+        Quaternion newRotation = Quaternion.Euler(pitch, yaw, roll);
 
-        spawnedObject.transform.localScale = new Vector3(size, size, size);
+        spawnedObject.transform.localScale = new Vector3(zoom, zoom, zoom);
         spawnedObject.transform.rotation = newRotation;
     }
 }

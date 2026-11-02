@@ -465,8 +465,10 @@ MonoBehaviour:
   prefabObject2: {fileID: 2908075457048005420, guid: 96a5005b0c7ac4549bb885facc9d82b5, type: 3}
   prefabObject3: {fileID: 4825777778629652340, guid: ce0b837e31aa4554da17214662b1b1dc, type: 3}
   spawnedObject: {fileID: 0}
-  rotation: 0
-  size: 0
+  pitch: 0
+  yaw: 0
+  roll: 0
+  zoom: 0
   id: 0
   spawnedId: -1
 --- !u!4 &986121517
@@ -514,6 +516,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MarkerReceiver
   port: 9000
+  rotationScript: {fileID: 986121516}
   resetTimeout: 1
   hasData: 0
   markerId: -1

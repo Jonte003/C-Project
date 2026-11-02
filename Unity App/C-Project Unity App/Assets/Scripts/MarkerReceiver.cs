@@ -9,6 +9,8 @@ public class MarkerReceiver : MonoBehaviour
 {
     public int port = 9000;
 
+    public RotationScript rotationScript;
+
     [Tooltip("Reset values if no message has arrived for a period of time.")]
     public float resetTimeout = 1.0f;
 
@@ -43,6 +45,7 @@ public class MarkerReceiver : MonoBehaviour
         {
             byte[] data = udpClient.Receive(ref sender);
             TryDecode(data);
+            UpdateValues(rotationScript);
         }
 
         if (hasData && Time.time - lastReceivedTime > resetTimeout)
@@ -53,7 +56,17 @@ public class MarkerReceiver : MonoBehaviour
             pitch    = 0f;
             yaw      = 0f;
             roll     = 0f;
+            UpdateValues(rotationScript);
         }
+    }
+
+    private void UpdateValues(RotationScript script)
+    {
+        script.id = markerId;
+        script.zoom = zoom;
+        script.pitch = pitch;
+        script.yaw = yaw;
+        script.roll = roll;
     }
 
     private bool TryDecode(byte[] data)
