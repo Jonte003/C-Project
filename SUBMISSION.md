@@ -23,6 +23,9 @@ Required equipment or software:
  
 Known limitations: 
  - The program can only accept one marker, if more than one is displayed, only one will be read.
+ - The program can reads all 4x4 ArUco codes, but only codes with id between 0-2 will be recoginzed and displayed in unity.
+ - The rotation of the marker can be a bit unstable at times, somethimes jumping +-5 degrees (depending a bit on marker size, bigger works      
+   better), The ID and zoom is both extremly reliable tho, and that was our goal from the beginning (rotation was something we just added at the end because we had the data for it).
 
 Presentation date and time: 
  - Friday 6/11-2025 14:00
