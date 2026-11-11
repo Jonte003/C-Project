@@ -9,6 +9,14 @@ Responsibility: Find contours and return marker corner positions and ArUco id.
 Main contributions: Countor detection, Corner flattening, ArUco code reading
 */
 
+/*
+Improvements by: Kalle Lööf
+Changes made: Changed cv::RETR_LIST to cv::RETR_CCOMP in findContours and modified
+    the loop to only consider contours without parents. This change mostly fixes the
+    issue that makes the corner detection results fluctuate between frames.
+    It could be further improved, but at this point the detection feels stable enough.
+*/
+
 
 class QuadWithMat
 {
@@ -202,11 +210,18 @@ std::vector<QuadWithID> MarkerDetector::detectMarkers(cv::Mat &frame, int minAre
             filteredBinary.setTo(255, labels == i);
         }
     }
-    cv::findContours(filteredBinary, contours, hierarchy, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
 
-    for (auto &contour : contours)
+    cv::findContours(filteredBinary, contours, hierarchy, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
+
+    for (size_t i = 0; i < contours.size(); i++)
     {
-        // Save all shapes that are convex, have 4 corners (quadrilaterals), and meet the minimum area size
+        if (hierarchy[i][3] != -1)
+        {
+            continue;
+        }
+
+        std::vector<cv::Point> &contour = contours[i];
+
         std::vector<cv::Point> approx;
 
         double perimeter = cv::arcLength(contour, true);
@@ -218,7 +233,6 @@ std::vector<QuadWithID> MarkerDetector::detectMarkers(cv::Mat &frame, int minAre
         {
             quadrilaterals.push_back(approx);
         }
-        
     }
 
     SortCorners(quadrilaterals);
